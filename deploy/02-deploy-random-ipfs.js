@@ -5,20 +5,30 @@ const {storeImages} = require("../utils/uploadToPinata")
 
 const imagesLocation = "./images/randomNft"
 
+const metadataTemplate = {
+    name: "",
+    description: "",
+    image: "",
+    attributes: [
+        {
+            trait_type: "Cuteness",
+            value: 100,
+        }
+    ],
+}
+
 module.exports = async ({ getNamedAccounts, deployments }) => {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
-    let tokenUris
+    let tokenUris, vrfCoordinatorV2Address, subscriptionId
 
     // get the IPFS hashes of our images
     if(process.env.UPLOAD_TO_PINATA === "true") {
         tokenUris = await handleTokenUris()
     }
 
-    let vrfCoordinatorV2Address, subscriptionId
-
-    if (developmentChains.includes(network.name)) {
+    if (chainId == 31337) {
         const vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
         vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
         const tx = await vrfCoordinatorV2Mock.createSubscription()
@@ -45,6 +55,16 @@ async function handleTokenUris() {
     tokenUris = []
     // Store the image in IPFS
     // Store the metadata in IPFS
+    const {responses: imageUploadResponses, files} = await storeImages(imageLocation)
+    for (imageUploadResponseIndex in imageUploadResponses) {
+        // create metadata
+        // upload the metadata
+        let tokenUrisMetadata = {...metadataTemplate}
+        tokenUrisMetadata.name = files[imageUploadResponseIndex].replace(".png", "")
+        tokenUrisMetadata.description = `An adorable ${tokenUriMetadata.name} pup!`
+        tokenUrisMetadata.image = `ipfs://${imageUploadResponses[imageUploadResponseIndex].IpfsHash}`
+        console.log(`Uploading ${tokenUrisMetadata.name}...`)
+    }
 
     return tokenUris
 }
