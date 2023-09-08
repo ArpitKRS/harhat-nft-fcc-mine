@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     // When we mint an NFT, we will trigger a Chainlink VRF call to get us a random number
-    // using that number, we will get a random NFT 
+    // using that number, we will get a random NFT
     // Pug, Shiba Inu, St. Bernard
     // Pug super rare
     // Shiba sort of rare
@@ -38,7 +38,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     uint32 private constant NUM_WORDS = 1;
 
     // VRF Helpers
-    mapping (uint256 => address) public s_requestIdToSender;
+    mapping(uint256 => address) public s_requestIdToSender;
 
     // NFT variables
     uint256 public s_tokenCounter;
@@ -66,12 +66,13 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         i_mintFee = mintFee;
     }
 
-    function requestMft() public payable returns(uint256 requestId){
-        if(msg.value < i_mintFee) {
+    function requestMft() public payable returns (uint256 requestId) {
+        if (msg.value < i_mintFee) {
             revert RandomIpfsNft__NeedMoreETHSent();
         }
         requestId = i_vrfCoordinator.requestRandomWords(
-            i_gasLane, i_subscriptionId,
+            i_gasLane,
+            i_subscriptionId,
             REQUEST_CONFIRMATIONS,
             i_callbackGasLimit,
             NUM_WORDS
@@ -86,6 +87,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         s_tokenCounter = s_tokenCounter + 1;
         uint256 moddedRng = randomWords[0] % MAX_CHANCE_VALUE;
         Breed dogBreed = getBreedFromModdedRng(moddedRng);
+        s_tokenCounter++;
         _safeMint(dogOwner, newItemId);
         _setTokenURI(newItemId, s_dogTokenUris[uint256(dogBreed)]);
         emit NftMinted(dogBreed, dogOwner);
@@ -94,7 +96,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     function withdraw() public onlyOwner {
         uint256 amount = address(this).balance;
         (bool success, ) = payable(msg.sender).call{value: amount}("");
-        if(!success) {
+        if (!success) {
             revert RandomIpfsNft__TransferFailed();
         }
     }
@@ -102,8 +104,8 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     function getBreedFromModdedRng(uint256 moddedRng) public pure returns (Breed) {
         uint256 cumulativeSum = 0;
         uint256[3] memory chanceArray = getChanceArray();
-        for(uint256  i=0; i < chanceArray.length; i++){
-            if(moddedRng >= cumulativeSum && moddedRng < cumulativeSum + chanceArray[i]){
+        for (uint256 i = 0; i < chanceArray.length; i++) {
+            if (moddedRng >= cumulativeSum && moddedRng < cumulativeSum + chanceArray[i]) {
                 return Breed(i);
             }
             cumulativeSum += chanceArray[i];
