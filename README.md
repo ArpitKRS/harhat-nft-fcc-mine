@@ -8,3 +8,6 @@
 3. Dynamic SVG NFT
 - Pros: The data is on chain!
 - Cons: Expensive
+
+If price of ETH is above X -> Happy face
+if it's below -> Frown face
