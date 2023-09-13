@@ -29,4 +29,11 @@ module.expports = async ({getNamedAccounts}) => {
     console.log(`Random IPFS NFT index 0 has tokenURI: ${await randomIpfsNft.tokenURI(0)}`)
 
     // Dynamic NFT
+    const highValue = ethers.parseEther("4000")
+    const dynamicSvgNft = await ethers.getContract("DynamicSvgNft", deployer)
+    const dynamicSvgNftMintTx = await dynamicSvgNft.mintNft(highValue.toString())
+    await dynamicSvgNftMintTx.wait(1)
+    console.log(`Dynamic SVG NFT index 0 has tokenURI: ${await dynamicSvgNft.tokenURI(0)}`)
 }
+
+module.exports.tags = ["all", "mint"]
